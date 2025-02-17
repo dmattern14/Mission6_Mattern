@@ -5,12 +5,13 @@ using Mission6App.Models;
 namespace Mission6App.Controllers;
 
 public class HomeController : Controller
-{
-    private readonly ILogger<HomeController> _logger;
 
-    public HomeController(ILogger<HomeController> logger)
+{
+    private MovieFormContext _context;
+
+    public HomeController(MovieFormContext temp) //constructor
     {
-        _logger = logger;
+        _context = temp;
     }
 
     public IActionResult Index()
@@ -18,9 +19,24 @@ public class HomeController : Controller
         return View();
     }
 
-    public IActionResult Privacy()
+    public IActionResult About()
     {
         return View();
+    }
+    
+    [HttpGet]
+    public IActionResult Form()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    public IActionResult Form(Application response)
+    {
+        _context.Forms.Add(response); //Add record to Database
+        _context.SaveChanges();
+        
+        return View("FormConfirmation", response);
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
