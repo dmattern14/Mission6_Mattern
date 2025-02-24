@@ -1,57 +1,98 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Mission6App.Models;
+using Microsoft.EntityFrameworkCore;
 
-namespace Mission6App.Controllers;
 
-public class HomeController : Controller
-
+namespace Mission6App.Controllers
 {
-    private MovieFormContext _context;
+    public class HomeController : Controller
+    {
+        private MovieContext _context;
+        public HomeController(MovieContext temp)  // constructor
+        {
+            _context = temp;
+        }
 
-    public HomeController(MovieFormContext temp) //constructor
-    {
-        _context = temp;
-    }
+        public IActionResult Index()
+        {
+            return View();
+        }
 
-    public IActionResult Index()
-    {
-        return View();
-    }
+        public IActionResult GetToKnow()
+        {
+            return View();
+        }
 
-    public IActionResult About()
-    {
-        return View();
-    }
-    
-    [HttpGet]
-    public IActionResult Form()
-    {
-        return View();
-    }
+        [HttpGet]
+        public IActionResult AddMovie()
+        {
+            ViewBag.categories = _context.Categories.ToList();
+            return View("AddMovie", new Movie());
+        }
 
-    [HttpPost]
-    public IActionResult Form(Application response)
-    {
-        _context.Forms.Add(response); //Add record to Database
-        _context.SaveChanges();
-        
-        return View("FormConfirmation", response);
-    }
+        [HttpPost]
+        public IActionResult AddMovie(Movie response)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Movies.Add(response);
+                _context.SaveChanges();
 
-    public IActionResult MovieData()
-    {
-        //Linq
-        var movieData = _context.Forms
-            .Where(x => x.Rating == MovieRating.G)
-            .OrderBy(x => x.Title).ToList();
-        return View(movieData);
-    }
+                return View("Index");
+            }
+            else
+            {
+                ViewBag.categories = _context.Categories.ToList();
+                return View(response);
+            }
+            
+        }
 
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        public IActionResult ViewMovies()
+        {
+            var movies = _context.Movies
+                .Include( x => x.Category)
+                .OrderBy(x => x.Title).ToList();
+
+            return View(movies);
+        }
+
+        [HttpGet]
+        public IActionResult Edit(int id)
+        {
+            var recordToEdit = _context.Movies
+                .Single(x => x.MovieId == id);
+            ViewBag.categories = _context.Categories.ToList();
+
+            return View("AddMovie", recordToEdit);
+        }
+
+        [HttpPost]
+        public IActionResult Edit(Movie updatedMovie)
+        {
+            _context.Update(updatedMovie);
+            _context.SaveChanges();
+
+            return RedirectToAction("ViewMovies");
+        }
+
+        [HttpGet]
+        public IActionResult Delete(int id)
+        {
+            var recordToDelete = _context.Movies
+                .Single(x => x.MovieId == id);
+
+            return View(recordToDelete);
+        }
+
+        [HttpPost]
+        public IActionResult Delete(Movie movie)
+        {
+            _context.Movies.Remove(movie);
+            _context.SaveChanges();
+
+            return RedirectToAction("ViewMovies");
+        }
     }
 }
