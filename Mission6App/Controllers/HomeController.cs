@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Mission6App.Models;
 
 namespace Mission6App.Controllers;
@@ -37,6 +38,15 @@ public class HomeController : Controller
         _context.SaveChanges();
         
         return View("FormConfirmation", response);
+    }
+
+    public IActionResult MovieData()
+    {
+        //Linq
+        var movieData = _context.Forms
+            .Where(x => x.Rating == MovieRating.G)
+            .OrderBy(x => x.Title).ToList();
+        return View(movieData);
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
